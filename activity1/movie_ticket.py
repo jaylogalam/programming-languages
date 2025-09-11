@@ -1,6 +1,6 @@
 import pandas as pd
 
-def get_customer(ctype: str) -> tuple:
+def get_customer(ctype: str):
     while True:
         try:
             count = int(input(f"Enter number of {ctype}: "))
@@ -16,7 +16,7 @@ def get_customer(ctype: str) -> tuple:
 
     return count - pwd, pwd
 
-def calculate_fee(ctype: str, normal: int, pwd: int):
+def get_pwd_discount(ctype: str, normal: int, pwd: int):
     fee: float = 0.00
     discount: float = 0.20
 
@@ -25,43 +25,44 @@ def calculate_fee(ctype: str, normal: int, pwd: int):
     else:
         fee: float = 300
 
-    normal_fee = normal * fee
-    pwd_fee = pwd * (fee - (fee * discount))
+    normal_fee = (normal + pwd) * fee
+    pwd_fee = pwd * fee * discount
 
-    return normal_fee, pwd_fee
+    return float(normal_fee), float(pwd_fee)
 
-def get_group_discount(count: int) -> float:
+def get_group_discount(count: int, kids: int, adults: int):
     if count > 10:
-        return 0.08
+        percent = 0.08
     elif count > 5:
-        return 0.06
+        percent = 0.06
     elif count > 2:
-        return 0.04
+        percent = 0.04
     elif count > 1:
-        return 0.02
+        percent = 0.02
     else:
-        return 0
+        percent = 0
+
+    discount = ((kids * 200) * percent) + ((adults * 300) * percent)
+
+    return int(percent * 100), discount
 
 def main():
     kids, pwd_kids = get_customer("kids")
     adults, pwd_adults = get_customer("adults")
 
-    kids_total_fee, pwd_kids_total_fee = calculate_fee("kids", kids, pwd_kids)
-    adults_total_fee, pwd_adults_total_fee = calculate_fee("adults", adults, pwd_adults)
+    kids_total_fee, pwd_kids_discount = get_pwd_discount("kids", kids, pwd_kids)
+    adults_total_fee, pwd_adults_discount = get_pwd_discount("adults", adults, pwd_adults)
 
-    normal_total_fee = kids_total_fee + adults_total_fee
-    pwd_total_fee = pwd_kids_total_fee + pwd_adults_total_fee
-    total_count = kids + adults + pwd_kids + pwd_adults
-    group_discount = normal_total_fee * get_group_discount(total_count)
-    normal_total_fee = normal_total_fee - group_discount
-
-    final_fee = normal_total_fee + pwd_total_fee
-    # print("Total fee: ", final_fee)
+    total_fee = float(kids_total_fee + adults_total_fee)
+    total_count = kids + pwd_kids + adults + pwd_adults
+    discount_percent, group_discount = get_group_discount(total_count, kids, adults)
+    pwd_discount = pwd_kids_discount + pwd_adults_discount
+    total = total_fee - pwd_discount - group_discount
 
     data = {
-        "": ["Kids", "Adults", "", "PWD Kids", "PWD Adults", "", "Total fee", "Group discount", "", ""],
-        "Count": [kids, adults, "", pwd_kids, pwd_adults, "", "", f"{int(get_group_discount(total_count) * 100)}%", "", "Total:"],
-        "Total": [kids_total_fee, adults_total_fee, "", pwd_kids_total_fee, pwd_adults_total_fee, "", normal_total_fee + pwd_total_fee, -group_discount, "", final_fee],
+        "": ["Kids", "Adults", "", "Total Fee", "PWD Discount", "Group Discount", "", ""],
+        "Count": [kids + pwd_kids, adults + pwd_adults, "", "", "", f"{discount_percent}%", "", "Total"],
+        "Total": [kids_total_fee, adults_total_fee, "", total_fee, -pwd_discount, -group_discount, "", total],
     }
     df = pd.DataFrame(data)
     print(df.to_string(index=False))
