@@ -1,18 +1,11 @@
-def even_odd():
-    try:
-        num = int(input("Enter a number: "))
-    except ValueError:
-        print("Invalid input")
-        return
+try:
+    num = int(input("Enter a number: "))
 
     if num % 2 == 0:
         print("Even")
 
     if num % 2 == 1:
         print("Odd")
-
-def main():
-    even_odd()
-
-if "__main__" == __name__:
-    main()
+        
+except ValueError:
+    print("Invalid input")

@@ -1,11 +1,10 @@
-def student_score():
-    try:
-        score = int(input("Enter score: "))
-    except ValueError:
-        print("Invalid input")
-        return
+try:
+    score = int(input("Enter score: "))
 
-    if score < 60:
+    if score < 0 or score > 100:
+        print("Invalid score")
+
+    elif score < 60:
         print("F")
 
     elif score < 70:
@@ -24,9 +23,7 @@ def student_score():
         print("Passed")
     else:
         print("Failed")
+        
+except ValueError:
+    print("Invalid input")
 
-def main():
-    student_score()
-
-if __name__ == "__main__":
-    main()
