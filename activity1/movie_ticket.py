@@ -1,14 +1,26 @@
 import pandas as pd
 
+fee = {
+    "kids": 200,
+    "adults": 300
+}
+discount: float = 0.20
+
 def get_customer(ctype: str):
     while True:
         try:
             count = int(input(f"Enter number of {ctype}: "))
             if count < 1:
                 return 0, 0
-            pwd = int(input("How many are PWD: "))
+
+            if ctype == "kids":
+                pwd = int(input("How many are PWD: "))
+            else:
+                pwd = int(input("How many are PWD/Senior Citizen: "))
+                
             if pwd > count:
                 raise ValueError
+            
             break
 
         except ValueError:
@@ -16,56 +28,57 @@ def get_customer(ctype: str):
 
     return count - pwd, pwd
 
-def get_pwd_discount(ctype: str, normal: int, pwd: int):
-    fee: float = 0.00
-    discount: float = 0.20
+def get_total_fee(ctype: str, count: int, pwd: int):
+    total_fee = (count + pwd) * fee[ctype]
+    pwd_discount = pwd * fee[ctype] * discount
 
-    if ctype == "kids":
-        fee: float = 200
-    else:
-        fee: float = 300
+    return float(total_fee), float(pwd_discount)
 
-    normal_fee = (normal + pwd) * fee
-    pwd_fee = pwd * fee * discount
-
-    return float(normal_fee), float(pwd_fee)
-
-def get_group_discount(count: int, kids: int, adults: int):
-    if count > 10:
+def get_group_discount(total: int, kids: int, adults: int):
+    if total > 10:
         percent = 0.08
-    elif count > 5:
+    elif total > 5:
         percent = 0.06
-    elif count > 2:
+    elif total > 2:
         percent = 0.04
-    elif count > 1:
+    elif total > 1:
         percent = 0.02
     else:
         percent = 0
 
     discount = ((kids * 200) * percent) + ((adults * 300) * percent)
 
-    return int(percent * 100), discount
+    return discount, int(percent * 100)
 
 def main():
-    kids, pwd_kids = get_customer("kids")
-    adults, pwd_adults = get_customer("adults")
+    kids_count, pwd_kids_count = get_customer("kids")
+    adults_count, pwd_adults_count = get_customer("adults")
+    group_count = kids_count + pwd_kids_count + adults_count + pwd_adults_count
 
-    kids_total_fee, pwd_kids_discount = get_pwd_discount("kids", kids, pwd_kids)
-    adults_total_fee, pwd_adults_discount = get_pwd_discount("adults", adults, pwd_adults)
+    kids_total_fee, kids_pwd_discount = get_total_fee("kids", kids_count, pwd_kids_count)
+    adults_total_fee, adults_pwd_discount = get_total_fee("adults", adults_count, pwd_adults_count)
+    group_discount, percent = get_group_discount(group_count, kids_count + pwd_kids_count, adults_count + pwd_adults_count)
 
-    total_fee = float(kids_total_fee + adults_total_fee)
-    total_count = kids + pwd_kids + adults + pwd_adults
-    discount_percent, group_discount = get_group_discount(total_count, kids, adults)
-    pwd_discount = pwd_kids_discount + pwd_adults_discount
-    total = total_fee - pwd_discount - group_discount
+    initial = kids_total_fee + adults_total_fee
+    total = initial - (kids_pwd_discount + adults_pwd_discount + group_discount)
 
-    data = {
-        "": ["Kids", "Adults", "", "Total Fee", "PWD Discount", "Group Discount", "", ""],
-        "Count": [kids + pwd_kids, adults + pwd_adults, "", "", "", f"{discount_percent}%", "", "Total"],
-        "Total": [kids_total_fee, adults_total_fee, "", total_fee, -pwd_discount, -group_discount, "", total],
+    initial_fee_data = {
+        "": ["Kids", "Adults", f"{"-"*15}", ""],
+        "Count": [kids_count + pwd_kids_count, adults_count + pwd_adults_count, f"{"-"*10}", "Fee"],
+        "Total": [kids_total_fee, adults_total_fee, f"{"-"*8}", initial],
     }
-    df = pd.DataFrame(data)
-    print(df.to_string(index=False))
 
+    discount_df = {
+        "": ["Group", "PWD/Senior", f"{"-"*15}", ""],
+        "Discount": [f"{percent}%", "20%", f"{"-"*10}", "Total Fee:"],
+        "Total": [group_discount, kids_pwd_discount + adults_pwd_discount, f"{"-"*8}", total],
+    }
+
+    initial_fee_df = pd.DataFrame(initial_fee_data)
+    discount_df = pd.DataFrame(discount_df)
+    print(initial_fee_df.to_string(index=False), end="\n\n")
+    print(discount_df.to_string(index=False), end="\n\n")
+    
+    
 if __name__ == "__main__":
     main()
